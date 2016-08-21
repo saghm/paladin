@@ -1,0 +1,13 @@
+[package]
+name = "palide"
+version = "0.1.0"
+authors = ["Saghm Rossi <saghmrossi@gmail.com>"]
+license = "MIT"
+
+[dependencies]
+conrod = "0.40"
+find_folder = "0.3"
+piston_window = "0.51"
+
+[dependencies.pal]
+path = "../pal"
