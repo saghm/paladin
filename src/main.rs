@@ -1,15 +1,18 @@
 // Adapted from [https://github.com/PistonDevelopers/conrod/blob/4683a5f00ba08454dda25127783d1334c06df516/examples/text_edit.rs]
 
-#[macro_use] extern crate conrod;
+use std::sync::{Arc, RwLock};
+
+#[macro_use]
+extern crate conrod;
 extern crate find_folder;
 extern crate piston_window;
 
 use piston_window::{AdvancedWindow, EventLoop, OpenGL, PistonWindow, UpdateEvent};
 
-fn main() {
-    const WIDTH: u32 = 1600;
-    const HEIGHT: u32 = 900;
+const WIDTH: u32 = 1600;
+const HEIGHT: u32 = 1400;
 
+fn main() {
     // Construct the window.
     let mut window: PistonWindow =
         piston_window::WindowSettings::new("Pal IDE", [WIDTH, HEIGHT])
@@ -32,8 +35,9 @@ fn main() {
     // The image map describing each of our widget->image mappings (in our case, none).
     let image_map = conrod::image::Map::new();
 
-    // Some starting text to edit.
-    let mut text = String::new();
+    let mut editor_text = String::new();
+    let console_text = Arc::new(RwLock::new(String::new));
+    let mut input_text = String::new();
 
     while let Some(event) = window.next() {
         // Convert the piston event to a conrod event.
@@ -41,7 +45,7 @@ fn main() {
             ui.handle_event(e);
         }
 
-        event.update(|_| set_ui(ui.set_widgets(), &mut text));
+        event.update(|_| set_ui(&mut ui.set_widgets(), &mut editor_text, console_text.clone(), &mut input_text));
 
         window.draw_2d(&event, |c, g| {
             if let Some(primitives) = ui.draw_if_changed() {
@@ -55,22 +59,85 @@ fn main() {
     }
 }
 
-fn set_ui(ref mut ui: conrod::UiCell, text: &mut String) {
-    use conrod::{color, widget, Colorable, Positionable, Sizeable, Widget};
+fn set_ui(ui: &mut conrod::UiCell, editor_text: &mut String, console_text: Arc<RwLock<String>>, input_text: &mut String) {
+    use conrod::{color, widget, Colorable, Labelable, Positionable, Sizeable, Widget};
 
-    widget_ids!{CANVAS, TEXT_EDIT};
+    widget_ids! [
+        CANVAS,
+        RUN_BUTTON,
+        EDITOR_COLOR,
+        EDITOR,
+        EDITOR_SCROLL,
+        SEPARATOR,
+        CONSOLE_COLOR,
+        CONSOLE,
+        INPUT_COLOR,
+        INPUT
+    ];
 
-    widget::Canvas::new().color(color::BLACK).set(CANVAS, ui);
+    widget::Canvas::new().color(color::DARK_CHARCOAL).scroll_kids().set(CANVAS, ui);
 
-    for edit in widget::TextEdit::new(text)
+    let dim = ui.window_dim();
+    let canvas_width = dim[0] - 150.0;
+    let canvas_height = dim[1];
+
+    widget::Rectangle::fill_with([canvas_width, canvas_height * 9.0 / 14.0], color::BLACK)
+        .top_left_with_margin_on(CANVAS, 10.0)
+        .set(EDITOR_COLOR, ui);
+
+    for edit in widget::TextEdit::new(editor_text)
         .color(color::WHITE)
-        .padded_wh_of(CANVAS, 20.0)
-        .middle_of(CANVAS)
+        .padded_w_of(EDITOR_COLOR, 5.0)
+        .padded_h_of(EDITOR_COLOR, 2.0)
+        .x_y_relative_to(EDITOR_COLOR, 0.0, 0.0)
         .align_text_left()
         .line_spacing(10.0)
         .font_size(25)
-        .set(TEXT_EDIT, ui)
+        .set(EDITOR, ui)
     {
-        *text = edit;
+        *editor_text = edit;
     }
+
+    if widget::Button::new()
+        .top_right_with_margin_on(CANVAS, 10.0)
+        .w_h(120.0, canvas_height / 35.0)
+        .label("Run code")
+        .label_font_size(23)
+        .set(RUN_BUTTON, ui)
+        .into_iter().was_clicked()
+    {
+        let t = &mut *console_text.write().unwrap();
+        *t = format!("Lines: {}", editor_text.lines().count());
+    }
+
+
+    widget::Rectangle::fill_with([canvas_width, canvas_height * 3.0 / 56.0], color::DARK_BLUE)
+        .down_from(EDITOR_COLOR, 10.0)
+        .set(SEPARATOR, ui);
+
+    widget::Rectangle::fill_with([canvas_width, canvas_height / 4.0], color::BLACK)
+        .down_from(SEPARATOR, 10.0)
+        .set(CONSOLE_COLOR, ui);
+
+    widget::Text::new(&*console_text.read().unwrap())
+        .color(color::WHITE)
+        .padded_w_of(CONSOLE_COLOR, 5.0)
+        .padded_h_of(CONSOLE_COLOR, 2.0)
+        .x_y_relative_to(CONSOLE_COLOR, 0.0, 0.0)
+        .align_text_left()
+        .line_spacing(10.0)
+        .font_size(25)
+        .set(CONSOLE, ui);
+
+    for edit in widget::TextBox::new(input_text)
+        .w_h(canvas_width, canvas_height / 35.0)
+        .down_from(CONSOLE_COLOR, 10.0)
+        .font_size(25)
+        .set(INPUT, ui)
+        {
+            match edit {
+                widget::text_box::Event::Update(new_str) => *input_text = new_str,
+                widget::text_box::Event::Enter => input_text.clear(),
+            }
+        }
 }
