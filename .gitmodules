@@ -1,0 +1,3 @@
+[submodule "pal"]
+	path = pal
+	url = git@github.com:saghm/pal
