@@ -1,11 +1,13 @@
 // Adapted from [https://github.com/PistonDevelopers/conrod/blob/4683a5f00ba08454dda25127783d1334c06df516/examples/text_edit.rs]
 
-use std::sync::{Arc, RwLock};
-
 #[macro_use]
 extern crate conrod;
 extern crate find_folder;
+extern crate pal;
 extern crate piston_window;
+
+use std::thread;
+use std::sync::{Arc, RwLock};
 
 use piston_window::{AdvancedWindow, EventLoop, OpenGL, PistonWindow, UpdateEvent};
 
@@ -36,7 +38,7 @@ fn main() {
     let image_map = conrod::image::Map::new();
 
     let mut editor_text = String::new();
-    let console_text = Arc::new(RwLock::new(String::new));
+    let console_text = Arc::new(RwLock::new(String::new()));
     let mut input_text = String::new();
 
     while let Some(event) = window.next() {
@@ -106,8 +108,7 @@ fn set_ui(ui: &mut conrod::UiCell, editor_text: &mut String, console_text: Arc<R
         .set(RUN_BUTTON, ui)
         .into_iter().was_clicked()
     {
-        let t = &mut *console_text.write().unwrap();
-        *t = format!("Lines: {}", editor_text.lines().count());
+        run_program(editor_text.clone(), console_text.clone());
     }
 
 
@@ -140,4 +141,21 @@ fn set_ui(ui: &mut conrod::UiCell, editor_text: &mut String, console_text: Arc<R
                 widget::text_box::Event::Enter => input_text.clear(),
             }
         }
+}
+
+fn run_program(program: String, console_text: Arc<RwLock<String>>) {
+    thread::spawn(move || {
+        let stream = pal::run_program_with_stream(&program);
+
+        loop {
+            let (string, finished) = stream.read();
+            *console_text.write().unwrap() = string;
+
+            if finished {
+                break;
+            }
+        }
+
+        println!("finished!");
+    });
 }
