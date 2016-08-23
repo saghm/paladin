@@ -108,6 +108,7 @@ fn set_ui(ui: &mut conrod::UiCell, editor_text: &mut String, console_text: Arc<R
         .set(RUN_BUTTON, ui)
         .into_iter().was_clicked()
     {
+        console_text.write().unwrap().clear();
         run_program(editor_text.clone(), console_text.clone());
     }
 
@@ -149,7 +150,7 @@ fn run_program(program: String, console_text: Arc<RwLock<String>>) {
 
         loop {
             let (string, finished) = stream.read();
-            *console_text.write().unwrap() = string;
+            console_text.write().unwrap().push_str(&string);
 
             if finished {
                 break;
