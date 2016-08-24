@@ -10,4 +10,4 @@ find_folder = "0.3"
 piston_window = "0.51"
 
 [dependencies.pal]
-path = "../pal"
+git = "https://github.com/saghm/pal.git"

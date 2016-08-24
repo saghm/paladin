@@ -4,7 +4,7 @@ version = "0.1.0"
 dependencies = [
  "conrod 0.40.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "find_folder 0.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "pal 0.1.0",
+ "pal 0.1.0 (git+https://github.com/saghm/pal.git)",
  "piston_window 0.51.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -692,6 +692,7 @@ dependencies = [
 [[package]]
 name = "pal"
 version = "0.1.0"
+source = "git+https://github.com/saghm/pal.git#28253725f38a4f658740d8985ba99bf199662302"
 dependencies = [
  "lalrpop 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lalrpop-util 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
