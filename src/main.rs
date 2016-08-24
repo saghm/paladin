@@ -7,7 +7,7 @@ extern crate pal;
 extern crate piston_window;
 
 use std::thread;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, Condvar, Mutex, RwLock};
 
 use pal::Event;
 use piston_window::{AdvancedWindow, EventLoop, OpenGL, PistonWindow, UpdateEvent};
@@ -40,7 +40,8 @@ fn main() {
 
     let mut editor_text = String::new();
     let console_text = Arc::new(RwLock::new(String::new()));
-    let mut input_text = String::new();
+    let mut input_box_text = String::new();
+    let inputted_text = Arc::new((Mutex::new(String::new()), Condvar::new()));
 
     while let Some(event) = window.next() {
         // Convert the piston event to a conrod event.
@@ -48,7 +49,8 @@ fn main() {
             ui.handle_event(e);
         }
 
-        event.update(|_| set_ui(&mut ui.set_widgets(), &mut editor_text, console_text.clone(), &mut input_text));
+        event.update(|_| set_ui(&mut ui.set_widgets(), &mut editor_text, console_text.clone(),
+                                &mut input_box_text, inputted_text.clone()));
 
         window.draw_2d(&event, |c, g| {
             if let Some(primitives) = ui.draw_if_changed() {
@@ -62,7 +64,8 @@ fn main() {
     }
 }
 
-fn set_ui(ui: &mut conrod::UiCell, editor_text: &mut String, console_text: Arc<RwLock<String>>, input_text: &mut String) {
+fn set_ui(ui: &mut conrod::UiCell, editor_text: &mut String, console_text: Arc<RwLock<String>>,
+          input_box_text: &mut String, inputted_text: Arc<(Mutex<String>, Condvar)>) {
     use conrod::{color, widget, Colorable, Labelable, Positionable, Sizeable, Widget};
 
     widget_ids! [
@@ -110,7 +113,7 @@ fn set_ui(ui: &mut conrod::UiCell, editor_text: &mut String, console_text: Arc<R
         .into_iter().was_clicked()
     {
         console_text.write().unwrap().clear();
-        run_program(editor_text.clone(), console_text.clone());
+        run_program(editor_text.clone(), console_text.clone(), inputted_text.clone());
     }
 
 
@@ -132,21 +135,30 @@ fn set_ui(ui: &mut conrod::UiCell, editor_text: &mut String, console_text: Arc<R
         .font_size(25)
         .set(CONSOLE, ui);
 
-    for edit in widget::TextBox::new(input_text)
+    for edit in widget::TextBox::new(input_box_text)
         .w_h(canvas_width, canvas_height / 35.0)
         .down_from(CONSOLE_COLOR, 10.0)
         .font_size(25)
         .set(INPUT, ui)
         {
             match edit {
-                widget::text_box::Event::Update(new_str) => *input_text = new_str,
-                widget::text_box::Event::Enter => input_text.clear(),
+                widget::text_box::Event::Update(new_str) => *input_box_text = new_str,
+                widget::text_box::Event::Enter => {
+                    let &(ref string, ref condvar) = &*inputted_text;
+                    let mut unlocked_string = string.lock().unwrap();
+
+                    *unlocked_string = input_box_text.clone();
+                    input_box_text.clear();
+                    condvar.notify_one();
+                },
             }
         }
 }
 
-fn run_program(program: String, console_text: Arc<RwLock<String>>) {
+fn run_program(program: String, console_text: Arc<RwLock<String>>, inputted_text: Arc<(Mutex<String>, Condvar)>) {
     thread::spawn(move || {
+        println!("running program...");
+
         let stream = pal::run_program_with_stream(&program);
 
         loop {
@@ -155,16 +167,24 @@ fn run_program(program: String, console_text: Arc<RwLock<String>>) {
                 None => continue,
             };
 
+            println!("got event: {:?}", event);
+
             match event {
                 Event::Error => (), // TODO: Implement error handling
                 Event::Finished => break,
                 Event::NeedsInput => {
+                    let &(ref string, ref condvar) = &*inputted_text;
+                    let mut guard = string.lock().unwrap();
 
+                    guard = condvar.wait(guard).unwrap();
+                    stream.write_input(&guard);
+
+                    guard.clear();
                 }
                 Event::Output(ref string) => console_text.write().unwrap().push_str(string)
             };
         }
 
-        println!("finished!");
+        println!("finished!\n");
     });
 }
