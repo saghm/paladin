@@ -9,6 +9,7 @@ extern crate piston_window;
 use std::thread;
 use std::sync::{Arc, RwLock};
 
+use pal::Event;
 use piston_window::{AdvancedWindow, EventLoop, OpenGL, PistonWindow, UpdateEvent};
 
 const WIDTH: u32 = 1600;
@@ -149,12 +150,19 @@ fn run_program(program: String, console_text: Arc<RwLock<String>>) {
         let stream = pal::run_program_with_stream(&program);
 
         loop {
-            let (string, finished) = stream.read();
-            console_text.write().unwrap().push_str(&string);
+            let event = match stream.get_event() {
+                Some(e) => e,
+                None => continue,
+            };
 
-            if finished {
-                break;
-            }
+            match event {
+                Event::Error => (), // TODO: Implement error handling
+                Event::Finished => break,
+                Event::NeedsInput => {
+
+                }
+                Event::Output(ref string) => console_text.write().unwrap().push_str(string)
+            };
         }
 
         println!("finished!");
