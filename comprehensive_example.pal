@@ -1,0 +1,137 @@
+let comments = "I haven't implemented comments let, so I'll put comments into this variable";
+
+comments  = "################################### BASICS #########################################";
+
+comments     = "As shown above, variable declarations use `let` and statements end with semicolons";
+comments     = "As you can also see, variable reassignment is pretty much what you expect";
+
+comments  = "The four types of Pal are bool, int, string, and array.";
+comments  = "Arrays can hold different types, like in Python and Ruby";
+let types = [[-1, 0, 1], [true, false], ["words", "and", "shit"]];
+
+comments        = "Obviously, variables can be used in expressions too";
+let types_twice = [types, types];
+
+comments  = "################################### EXPRESSIONS ####################################";
+
+comments    = "The following two very contrived expressions demonstrate all of the binary";
+comments    = "  operators in Pal";
+comments    = "Note that `++` currently only concatenates arrays, not strings";
+let binops1 = ([1,2,3] ++ [4,5,6] == [1,2,3,4,5,6]) && (1 + 2 - 3 * 4 / 5 % 6 != 7);
+let binops2 = (8 >= 9) || (10 > 11) || (12 <= 13) || (14 < 15);
+
+comments          = "There's also the logical not operator, which is nothing novel";
+let this_is_false = !true;
+
+comments   = "Array indexing is zero-indexed, like every non-stupid language";
+let a      = [10, 11, 12];
+let twelve = a[2];
+
+comments         = "The `length` function returns the length of strings and arrays";
+let this_is_true = length("abc") == length([1, 2, 3]);
+
+comments     = "You can convert a string to an array of characters with the `letters` function";
+this_is_true = letters("abc") == ["a", "b", "c"];
+
+comments     = "The `range` function creates an array of sequential numbers (either up or down)";
+comments     = "Both ends are inclusive (because I hate when that's not the case)";
+this_is_true = range(1, 5) == [1, 2, 3, 4, 5];
+this_is_true = range(5, 1) == [5, 4, 3, 3, 1];
+
+comments     = "The `step` function is similar, but it lets you skip by a certain amount";
+comments     = "It also is inclusive on both ends, but obviously not when and endpoint is skipped";
+this_is_true = step(6, 0, -2) == [6, 4, 2, 0];
+this_is_true = step(5, 0, -2) == [5, 3, 1];
+
+comments    = "Note that the step function will throw an error when the sign of the skip value";
+comments    = "  makes it impossible to compute the array";
+let crashes = step(6, 0, 2);
+
+comments  = "################################### STATEMENTS #####################################";
+
+comments                = "No surprises with array assignment";
+let will_be_all_zeros   = [[0], [1]];
+will_be_all_zeros[1][0] = 0;
+
+comments          = "To delete an array element, use the `delete` statement";
+delete a[0][2][0] = [[1, 2, ["This is deleted"]]];
+
+comments = "`print` will print without a newline, and `print_line` will print with a newline";
+print("There is no newline printed at the end of this.");
+print_line("This comes right after the period of the above print statement because there's no newline, so it looks terrible, but don't worry, there's a newline here");
+
+comments = "All types can be printed out. For instance, the following prints '[1, 2, 3]'";
+print_line([1, 2, 3]);
+
+comments = "For loops iterate over arrays";
+
+let will_be_six = 0;
+for i in [1, 2, 3] {
+    will_be_six = will_be_six + i;
+}
+
+comments = "If you need a traditional C-style for loop, use either `range` or `step`";
+
+will_be_six = 0;
+for i in range(1, 3) {
+    will_be_six = will_be_six + i;
+}
+
+comments = "To iterate over strings, use the `letters` function";
+for letter in letters("abcdef") {
+    print_line(letter);
+}
+
+comments = "If/else if/else statements look just their C-style equivalents, except the braces are required."
+if (1 != 1) {
+    print_line("Well, that's fucked up");
+} else if (2 != 2) {
+    print_line("Wait, why did the first one work but not this one?")
+} else if (3 != 3) {
+    print_line("I don't even know what to think anymore");
+} else {
+    print_line("If this one isn't the one that prints out, I give up");
+}
+
+comments   = "Only boolean expressions can be used in if/else if clauses; for example, the following throws an error";
+let string = "Let's crash the interpreter because why not";
+if (string) {
+    print_line("Yup, this isn't printing, because the program threw an error");
+}
+
+comments           = "While loops also require braces, and they require boolean clauses as well.";
+comments           = "Otherwise, there isn't much notable about them";
+print_line("Counting down from 10");
+x = 0;
+while (x > 0) {
+    x = x - 1;
+}
+
+comments  = "#################################### FUNCTIONS #####################################";
+
+comments = "Functions require the return type to be provided in the declaration, but not the parameter types";
+comments = "The valid return types are `int`, `bool`, `string`, `array`, and `void`";
+
+void print_spam() {
+    print_line("spam");
+}
+
+int plus(a, b) {
+    return a + b;
+}
+
+bool xor(a, b) {
+    return (!a && b) || (a && !b);
+}
+
+string get_first_char(s) {
+    return letters(s)[0];
+}
+
+array make_2x2_array(a, b, c, d) {
+    return [[a, b], [c, d]];
+}
+
+comments                 = "Function calls are mostly straightforward, but there's one catch";
+comments                 = "Assigning a void function call to a variable throws an error";
+let this_throws_an_error = print_spam();
