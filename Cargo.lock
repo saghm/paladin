@@ -26,7 +26,7 @@ name = "arrayvec"
 version = "0.3.16"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "nodrop 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "nodrop 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "odds 0.2.15 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -264,7 +264,7 @@ dependencies = [
 
 [[package]]
 name = "gcc"
-version = "0.3.34"
+version = "0.3.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -370,7 +370,7 @@ dependencies = [
  "lazy_static 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "objc 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "osmesa-sys 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "osmesa-sys 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "shared_library 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "shell32-sys 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "user32-sys 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -572,7 +572,7 @@ name = "miniz-sys"
 version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
- "gcc 0.3.34 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gcc 0.3.35 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.2.15 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
@@ -588,7 +588,7 @@ dependencies = [
 
 [[package]]
 name = "nodrop"
-version = "0.1.6"
+version = "0.1.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "odds 0.2.15 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -683,7 +683,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "osmesa-sys"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "shared_library 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -692,7 +692,7 @@ dependencies = [
 [[package]]
 name = "pal"
 version = "0.1.0"
-source = "git+https://github.com/saghm/pal.git#28253725f38a4f658740d8985ba99bf199662302"
+source = "git+https://github.com/saghm/pal.git#097d30dedb03ea95a093b36064274977c289bd09"
 dependencies = [
  "lalrpop 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "lalrpop-util 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -961,7 +961,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "serde"
-version = "0.8.3"
+version = "0.8.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -972,7 +972,7 @@ dependencies = [
  "dtoa 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "itoa 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-traits 0.1.35 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 0.8.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 0.8.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
