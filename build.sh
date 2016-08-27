@@ -4,7 +4,7 @@
 mkdir -p paladin
 
 # Build IDE
-cargo build --release --target=x86_64-apple-darwin
+cargo build --release || exit
 
 # Copy resources into build directory
 cp -rv comprehensive_example.pal inconsolata target/release/paladin paladin
