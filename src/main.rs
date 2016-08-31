@@ -2,26 +2,47 @@
 
 #[macro_use]
 extern crate conrod;
+extern crate docopt;
 extern crate find_folder;
 extern crate pal;
 extern crate piston_window;
+extern crate rustc_serialize;
 
 use std::thread;
 use std::sync::{Arc, Condvar, Mutex, RwLock};
 
+use docopt::Docopt;
 use pal::Event;
 use piston_window::{AdvancedWindow, EventLoop, OpenGL, PistonWindow, UpdateEvent};
 
 const WIDTH: u32 = 1600;
 const HEIGHT: u32 = 1400;
 
+const USAGE: &'static str = "
+Paladin: The Pal IDE
+
+Usage:
+    paladin --width=<w> --height=<h> --fontsize=<f>
+    paladin (-h | --help)
+    paladin (-v | --version)
+";
+
+#[derive(Debug, RustcDecodable)]
+struct Args {
+    flag_width: u32,
+    flag_height: u32,
+    flag_fontsize: u32,
+}
+
 fn main() {
+    let args: Args = Docopt::new(USAGE).and_then(|d| d.decode()).unwrap_or_else(|e| e.exit());
+
     // Construct the window.
     let mut window: PistonWindow =
-        piston_window::WindowSettings::new("Pal IDE", [WIDTH, HEIGHT])
+        piston_window::WindowSettings::new("Pal IDE", [args.flag_width, args.flag_height])
             .opengl(OpenGL::V3_2).exit_on_esc(true).build().unwrap();
     window.set_ups(60);
-    window.set_position([100, 100]);
+    window.set_position([0, 0]);
 
     // construct our `Ui`.
     let mut ui = conrod::UiBuilder::new().build();
@@ -50,7 +71,7 @@ fn main() {
         }
 
         event.update(|_| set_ui(&mut ui.set_widgets(), &mut editor_text, console_text.clone(),
-                                &mut input_box_text, inputted_text.clone()));
+                                &mut input_box_text, inputted_text.clone(), args.flag_fontsize));
 
         window.draw_2d(&event, |c, g| {
             if let Some(primitives) = ui.draw_if_changed() {
@@ -65,7 +86,7 @@ fn main() {
 }
 
 fn set_ui(ui: &mut conrod::UiCell, editor_text: &mut String, console_text: Arc<RwLock<String>>,
-          input_box_text: &mut String, inputted_text: Arc<(Mutex<String>, Condvar)>) {
+          input_box_text: &mut String, inputted_text: Arc<(Mutex<String>, Condvar)>, font_size: u32) {
     use conrod::{color, widget, Colorable, Labelable, Positionable, Sizeable, Widget};
 
     widget_ids! [
@@ -98,7 +119,7 @@ fn set_ui(ui: &mut conrod::UiCell, editor_text: &mut String, console_text: Arc<R
         .x_y_relative_to(EDITOR_COLOR, 0.0, 0.0)
         .align_text_left()
         .line_spacing(10.0)
-        .font_size(25)
+        .font_size(font_size)
         .set(EDITOR, ui)
     {
         *editor_text = edit;
@@ -132,13 +153,13 @@ fn set_ui(ui: &mut conrod::UiCell, editor_text: &mut String, console_text: Arc<R
         .x_y_relative_to(CONSOLE_COLOR, 0.0, 0.0)
         .align_text_left()
         .line_spacing(10.0)
-        .font_size(25)
+        .font_size(font_size)
         .set(CONSOLE, ui);
 
     for edit in widget::TextBox::new(input_box_text)
         .w_h(canvas_width, canvas_height / 35.0)
         .down_from(CONSOLE_COLOR, 10.0)
-        .font_size(25)
+        .font_size(font_size)
         .set(INPUT, ui)
         {
             match edit {

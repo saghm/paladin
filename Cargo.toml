@@ -1,13 +1,15 @@
 [package]
-name = "paladin"
-version = "0.1.0"
 authors = ["Saghm Rossi <saghmrossi@gmail.com>"]
 license = "MIT"
+name = "paladin"
+version = "0.1.0"
 
 [dependencies]
 conrod = "0.40"
+docopt = "0.6"
 find_folder = "0.3"
 piston_window = "0.51"
+rustc-serialize = "0.3"
 
 [dependencies.pal]
 git = "https://github.com/saghm/pal.git"
