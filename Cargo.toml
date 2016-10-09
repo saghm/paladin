@@ -5,10 +5,10 @@ name = "paladin"
 version = "0.1.0"
 
 [dependencies]
-conrod = "0.40"
+conrod = "0.44"
 docopt = "0.6"
 find_folder = "0.3"
-piston_window = "0.51"
+piston_window = "0.52"
 rustc-serialize = "0.3"
 
 [dependencies.pal]
