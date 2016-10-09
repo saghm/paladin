@@ -1,5 +1,3 @@
-// Adapted from [https://github.com/PistonDevelopers/conrod/blob/4683a5f00ba08454dda25127783d1334c06df516/examples/text_edit.rs]
-
 #[macro_use]
 extern crate conrod;
 extern crate docopt;
@@ -40,15 +38,22 @@ fn main() {
     // Construct the window.
     let mut window: PistonWindow =
         piston_window::WindowSettings::new("Pal IDE", [args.flag_width, args.flag_height])
-            .opengl(OpenGL::V3_2).exit_on_esc(true).build().unwrap();
+            .opengl(OpenGL::V3_2)
+            .exit_on_esc(true)
+            .build()
+            .unwrap();
     window.set_ups(60);
     window.set_position([0, 0]);
 
     // construct our `Ui`.
     let mut ui = conrod::UiBuilder::new().build();
 
+    let ids = Ids::new(ui.widget_id_generator());
+
     // Add a `Font` to the `Ui`'s `font::Map` from file.
-    let assets = find_folder::Search::KidsThenParents(3, 5).for_folder("inconsolata").expect("Unable to find font folder");
+    let assets = find_folder::Search::KidsThenParents(3, 5)
+        .for_folder("inconsolata")
+        .expect("Unable to find font folder");
     let font_path = assets.join("Inconsolata-Regular.ttf");
     ui.fonts.insert_from_file(font_path).expect("Unable to insert font file");
 
@@ -70,113 +75,147 @@ fn main() {
             ui.handle_event(e);
         }
 
-        event.update(|_| set_ui(&mut ui.set_widgets(), &mut editor_text, console_text.clone(),
-                                &mut input_box_text, inputted_text.clone(), args.flag_fontsize));
+        event.update(|_| {
+            set_widgets(ui.set_widgets(),
+                        &mut editor_text,
+                        console_text.clone(),
+                        &mut input_box_text,
+                        inputted_text.clone(),
+                        args.flag_fontsize,
+                        &ids)
+        });
 
         window.draw_2d(&event, |c, g| {
             if let Some(primitives) = ui.draw_if_changed() {
-                fn texture_from_image<T>(img: &T) -> &T { img };
-                conrod::backend::piston_window::draw(c, g, primitives,
-                    &mut text_texture_cache,
-                    &image_map,
-                    texture_from_image);
-                }
+                fn texture_from_image<T>(img: &T) -> &T {
+                    img
+                };
+                conrod::backend::piston_window::draw(c,
+                                                     g,
+                                                     primitives,
+                                                     &mut text_texture_cache,
+                                                     &image_map,
+                                                     texture_from_image);
+            }
         });
     }
 }
 
-fn set_ui(ui: &mut conrod::UiCell, editor_text: &mut String, console_text: Arc<RwLock<String>>,
-          input_box_text: &mut String, inputted_text: Arc<(Mutex<String>, Condvar)>, font_size: u32) {
+widget_ids! {
+    struct Ids {
+        canvas,
+        run_button,
+        editor_color,
+        editor,
+        editor_scroll,
+        separator,
+        console_color,
+        console,
+        input_color,
+        input
+    }
+}
+
+
+
+fn set_widgets(ref mut ui: conrod::UiCell,
+               editor_text: &mut String,
+               console_text: Arc<RwLock<String>>,
+               input_box_text: &mut String,
+               inputted_text: Arc<(Mutex<String>, Condvar)>,
+               font_size: u32,
+               ids: &Ids) {
     use conrod::{color, widget, Colorable, Labelable, Positionable, Sizeable, Widget};
 
-    widget_ids! [
-        CANVAS,
-        RUN_BUTTON,
-        EDITOR_COLOR,
-        EDITOR,
-        EDITOR_SCROLL,
-        SEPARATOR,
-        CONSOLE_COLOR,
-        CONSOLE,
-        INPUT_COLOR,
-        INPUT
-    ];
-
-    widget::Canvas::new().color(color::DARK_CHARCOAL).scroll_kids().set(CANVAS, ui);
+    widget::Canvas::new().color(color::DARK_CHARCOAL).scroll_kids().set(ids.canvas, ui);
 
     let dim = ui.window_dim();
     let canvas_width = dim[0] - 150.0;
     let canvas_height = dim[1];
+    let editor_color_height = canvas_height * 9.0 / 14.0;
+    let margin = 10.0;
+    let width_padding = 5.0;
+    let height_padding = 2.0;
+    let line_spacing = font_size as f64 * 1.2;
+    let button_width = 120.0;
+    let button_height = canvas_height / 35.0;
+    let button_font_size = button_height as u32 - 2;
+    let separator_offset = 10.0;
+    let separator_height = canvas_height * 3.0 / 56.0;
+    let console_color_height =  canvas_height / 4.0;
+    let input_height = canvas_height / 35.0;
 
-    widget::Rectangle::fill_with([canvas_width, canvas_height * 9.0 / 14.0], color::BLACK)
-        .top_left_with_margin_on(CANVAS, 10.0)
-        .set(EDITOR_COLOR, ui);
+    widget::Rectangle::fill_with([canvas_width, editor_color_height], color::BLACK)
+        .top_left_with_margin_on(ids.canvas, margin)
+        .set(ids.editor_color, ui);
 
     for edit in widget::TextEdit::new(editor_text)
         .color(color::WHITE)
-        .padded_w_of(EDITOR_COLOR, 5.0)
-        .padded_h_of(EDITOR_COLOR, 2.0)
-        .x_y_relative_to(EDITOR_COLOR, 0.0, 0.0)
+        .padded_w_of(ids.editor_color, width_padding)
+        .padded_h_of(ids.editor_color, height_padding)
+        .x_y_relative_to(ids.editor_color, 0.0, 0.0)
         .align_text_left()
-        .line_spacing(10.0)
+        .line_spacing(line_spacing)
         .font_size(font_size)
-        .set(EDITOR, ui)
-    {
+        .set(ids.editor, ui) {
         *editor_text = edit;
     }
 
     if widget::Button::new()
-        .top_right_with_margin_on(CANVAS, 10.0)
-        .w_h(120.0, canvas_height / 35.0)
+        .top_right_with_margin_on(ids.canvas, margin)
+        .w_h(button_width, button_height)
         .label("Run code")
-        .label_font_size(23)
-        .set(RUN_BUTTON, ui)
-        .into_iter().was_clicked()
-    {
+        .label_font_size(button_font_size)
+        .set(ids.run_button, ui)
+        .into_iter()
+        .was_clicked() {
         console_text.write().unwrap().clear();
-        run_program(editor_text.clone(), console_text.clone(), inputted_text.clone());
+        run_program(editor_text.clone(),
+                    console_text.clone(),
+                    inputted_text.clone());
     }
 
 
-    widget::Rectangle::fill_with([canvas_width, canvas_height * 3.0 / 56.0], color::DARK_BLUE)
-        .down_from(EDITOR_COLOR, 10.0)
-        .set(SEPARATOR, ui);
+    widget::Rectangle::fill_with([canvas_width, separator_height], color::DARK_BLUE)
+        .down_from(ids.editor_color, separator_offset)
+        .set(ids.separator, ui);
 
-    widget::Rectangle::fill_with([canvas_width, canvas_height / 4.0], color::BLACK)
-        .down_from(SEPARATOR, 10.0)
-        .set(CONSOLE_COLOR, ui);
+    widget::Rectangle::fill_with([canvas_width, console_color_height], color::BLACK)
+        .down_from(ids.separator, separator_offset)
+        .set(ids.console_color, ui);
 
     widget::Text::new(&*console_text.read().unwrap())
         .color(color::WHITE)
-        .padded_w_of(CONSOLE_COLOR, 5.0)
-        .padded_h_of(CONSOLE_COLOR, 2.0)
-        .x_y_relative_to(CONSOLE_COLOR, 0.0, 0.0)
+        .padded_w_of(ids.console_color, width_padding)
+        .padded_h_of(ids.console_color, height_padding)
+        .x_y_relative_to(ids.console_color, 0.0, 0.0)
         .align_text_left()
-        .line_spacing(10.0)
+        .line_spacing(line_spacing)
         .font_size(font_size)
-        .set(CONSOLE, ui);
+        .set(ids.console, ui);
 
     for edit in widget::TextBox::new(input_box_text)
-        .w_h(canvas_width, canvas_height / 35.0)
-        .down_from(CONSOLE_COLOR, 10.0)
+        .w_h(canvas_width, input_height)
+        .down_from(ids.console_color, separator_offset)
         .font_size(font_size)
-        .set(INPUT, ui)
-        {
-            match edit {
-                widget::text_box::Event::Update(new_str) => *input_box_text = new_str,
-                widget::text_box::Event::Enter => {
-                    let &(ref string, ref condvar) = &*inputted_text;
-                    let mut unlocked_string = string.lock().unwrap();
+        .set(ids.input, ui) {
+        match edit {
+            widget::text_box::Event::Update(new_str) => *input_box_text = new_str,
+            widget::text_box::Event::Enter => {
+                let &(ref string, ref condvar) = &*inputted_text;
+                let mut unlocked_string = string.lock().unwrap();
 
-                    *unlocked_string = input_box_text.clone();
-                    input_box_text.clear();
-                    condvar.notify_one();
-                },
+                *unlocked_string = input_box_text.clone();
+                input_box_text.clear();
+                condvar.notify_one();
             }
         }
+    }
 }
 
-fn run_program(program: String, console_text: Arc<RwLock<String>>, inputted_text: Arc<(Mutex<String>, Condvar)>) {
+fn run_program(program: String,
+               console_text: Arc<RwLock<String>>,
+               inputted_text: Arc<(Mutex<String>, Condvar)>) {
     thread::spawn(move || {
         println!("running program...");
 
@@ -202,7 +241,7 @@ fn run_program(program: String, console_text: Arc<RwLock<String>>, inputted_text
 
                     guard.clear();
                 }
-                Event::Output(ref string) => console_text.write().unwrap().push_str(string)
+                Event::Output(ref string) => console_text.write().unwrap().push_str(string),
             };
         }
 
